@@ -10,13 +10,301 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import altair as alt
 import re
+import base64
 
 # --- Configuración general ---
 st.set_page_config(
-    page_title="Directorio Celera", 
+    page_title="Celera Community Directory", 
+    page_icon="🌟",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# --- CSS Personalizado ---
+def load_css():
+    st.markdown("""
+    <style>
+    /* Importar fuente moderna */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    /* Variables de color */
+    :root {
+        --primary-color: #2E4057;
+        --secondary-color: #048A81;
+        --accent-color: #54C6EB;
+        --text-color: #1E1E1E;
+        --bg-color: #F8F9FA;
+        --card-bg: #FFFFFF;
+    }
+    
+    /* Fuente global */
+    html, body, [class*="css"] {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    /* Header personalizado */
+    .main-header {
+        background: linear-gradient(135deg, #2E4057 0%, #048A81 100%);
+        padding: 2rem 3rem;
+        border-radius: 0 0 20px 20px;
+        margin: -1rem -1rem 2rem -1rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .header-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .logo-title {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+    
+    .logo-title img {
+        height: 60px;
+        width: auto;
+    }
+    
+    .title-text h1 {
+        color: white;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        letter-spacing: -0.5px;
+    }
+    
+    .title-text p {
+        color: rgba(255,255,255,0.9);
+        font-size: 1.1rem;
+        margin: 0.3rem 0 0 0;
+        font-weight: 300;
+    }
+    
+    .header-stats {
+        display: flex;
+        gap: 2rem;
+        color: white;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 0.5rem 1rem;
+        background: rgba(255,255,255,0.15);
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        display: block;
+    }
+    
+    .stat-label {
+        font-size: 0.85rem;
+        opacity: 0.9;
+        font-weight: 300;
+    }
+    
+    /* Tabs personalizadas */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background-color: transparent;
+        padding: 0;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        background-color: white;
+        border-radius: 10px 10px 0 0;
+        padding: 0 24px;
+        font-weight: 500;
+        border: 1px solid #E0E0E0;
+        border-bottom: none;
+        transition: all 0.3s ease;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, #2E4057 0%, #048A81 100%);
+        color: white !important;
+        border-color: #2E4057;
+    }
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        background-color: #f0f0f0;
+    }
+    
+    .stTabs [aria-selected="true"]:hover {
+        background: linear-gradient(135deg, #2E4057 0%, #048A81 100%);
+    }
+    
+    /* Cards */
+    .custom-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+        border: 1px solid #E8E8E8;
+        transition: all 0.3s ease;
+    }
+    
+    .custom-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    /* Sidebar */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #2E4057 0%, #1a2634 100%);
+    }
+    
+    [data-testid="stSidebar"] * {
+        color: white !important;
+    }
+    
+    [data-testid="stSidebar"] .stSelectbox label,
+    [data-testid="stSidebar"] .stMultiSelect label,
+    [data-testid="stSidebar"] .stTextInput label,
+    [data-testid="stSidebar"] .stSlider label {
+        color: white !important;
+        font-weight: 500;
+    }
+    
+    /* Botones */
+    .stButton > button {
+        background: linear-gradient(135deg, #048A81 0%, #54C6EB 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    /* Métricas */
+    [data-testid="stMetricValue"] {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2E4057;
+    }
+    
+    /* Dataframe */
+    .dataframe {
+        border: none !important;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    /* Form */
+    .stForm {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    
+    /* Divider */
+    hr {
+        margin: 2rem 0;
+        border: none;
+        border-top: 1px solid #E8E8E8;
+    }
+    
+    /* Expander */
+    .streamlit-expanderHeader {
+        background-color: #F8F9FA;
+        border-radius: 8px;
+        border: 1px solid #E8E8E8;
+        font-weight: 500;
+    }
+    
+    /* Info boxes */
+    .stAlert {
+        border-radius: 10px;
+        border-left: 4px solid #048A81;
+    }
+    
+    /* Mejoras de espaciado */
+    .block-container {
+        padding-top: 1rem;
+        padding-bottom: 3rem;
+    }
+    
+    /* Scrollbar personalizada */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: #048A81;
+        border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: #2E4057;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+def get_logo_base64():
+    """Intentar cargar el logo desde assets"""
+    logo_path = Path("assets/logo.png")
+    if logo_path.exists():
+        with open(logo_path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    return None
+
+def create_header(total_members, total_generations):
+    """Crear header moderno con logo y estadísticas"""
+    logo_base64 = get_logo_base64()
+    
+    if logo_base64:
+        logo_html = f'<img src="data:image/png;base64,{logo_base64}" alt="Celera Logo">'
+    else:
+        logo_html = '<div style="width:60px;height:60px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;">🌟</div>'
+    
+    st.markdown(f"""
+    <div class="main-header">
+        <div class="header-content">
+            <div class="logo-title">
+                {logo_html}
+                <div class="title-text">
+                    <h1>Celera Community</h1>
+                    <p>Directorio de Miembros y Red de Networking</p>
+                </div>
+            </div>
+            <div class="header-stats">
+                <div class="stat-item">
+                    <span class="stat-number">{total_members}</span>
+                    <span class="stat-label">Celerados</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{total_generations}</span>
+                    <span class="stat-label">Generaciones</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Aplicar CSS
+load_css()
 
 # --- Cargar datos ---
 @st.cache_data
@@ -472,8 +760,13 @@ if df.empty:
     st.error("No se pudieron cargar los datos. Verifica que el archivo 'directorio.csv.csv' esté en el directorio correcto.")
     st.stop()
 
+# --- Header Principal ---
+total_generaciones = len(df["Generación"].unique()) if "Generación" in df.columns else 0
+create_header(len(df), total_generaciones)
+
 # --- Sidebar: Filtros del directorio ---
 st.sidebar.title("🔍 Filtros del directorio")
+st.sidebar.markdown("---")
 
 # Filtros básicos
 generacion = st.sidebar.multiselect(
@@ -650,16 +943,19 @@ if len(filtro) < len(df):
         st.sidebar.caption("**Filtros activos:**")
         for filtro_activo in filtros_activos:
             st.sidebar.caption(f"• {filtro_activo}")
-    
-    if st.sidebar.button("🔄 Limpiar todos los filtros"):
-        st.rerun()
+        
+        # Solo mostrar botón si hay filtros activos
+        if st.sidebar.button("🔄 Limpiar todos los filtros", key="btn_limpiar_filtros"):
+            st.rerun()
 
 # --- Tabs principales ---
-tab1, tab2, tab3, tab4 = st.tabs(["📒 Directorio", "🔗 Matchmaking", "📊 Analytics", "🎯 Insights"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📒 Directorio", "🔗 Matchmaking", "📊 Analytics", "🎯 Insights", "➕ Nuevo Miembro"])
 
 with tab1:
     # --- Mostrar directorio filtrado ---
-    st.title("📒 Directorio de Celerados")
+    st.markdown("## 📒 Directorio de Celerados")
+    st.markdown("Explora y conecta con los miembros de la comunidad Celera")
+    st.markdown("")
     
     # Contador de perfiles con datos completos vs parciales
     perfiles_con_industria = len(df[df["Industrias normalizadas"].apply(lambda x: isinstance(x, list) and len(x) > 0)])
@@ -728,7 +1024,9 @@ with tab1:
     )
 
 with tab2:
-    st.title("🔗 Matchmaking")
+    st.markdown("## 🔗 Matchmaking Inteligente")
+    st.markdown("Encuentra las conexiones más relevantes basadas en intereses y perfiles profesionales")
+    st.markdown("")
     
     # Filtrar solo perfiles válidos para matchmaking
     perfiles_matchmaking = filtrar_perfiles_validos_matchmaking(filtro)
@@ -761,7 +1059,7 @@ with tab2:
             help="Solo se muestran perfiles con datos completos para matchmaking"
         )
         
-        if st.button("🔍 Encontrar matches", type="primary"):
+        if st.button("🔍 Encontrar matches", type="primary", key="btn_encontrar_matches"):
             with st.spinner("Analizando perfiles y buscando matches..."):
                 matches = encontrar_matches(perfiles_matchmaking, perfil_seleccionado)
                 
@@ -831,7 +1129,9 @@ with tab2:
         st.info("💡 **Sugerencia:** Quita algunos filtros del sidebar para ver más perfiles, o verifica que los perfiles tengan datos de industria y rol completos.")
 
 with tab3:
-    st.title("📊 Analytics del Directorio")
+    st.markdown("## 📊 Analytics de la Comunidad")
+    st.markdown("Visualiza tendencias, distribuciones y estadísticas de la comunidad Celera")
+    st.markdown("")
     
     # Opción para ver todos los datos o solo filtrados
     col_toggle1, col_toggle2 = st.columns([3, 1])
@@ -1063,31 +1363,27 @@ with tab3:
                     st.plotly_chart(fig_super, width='stretch')
 
 with tab4:
-    st.title("🎯 Insights de la Comunidad Celera")
+    st.markdown("## 🎯 Insights Clave")
+    st.markdown("Descubre patrones, perfiles dominantes y datos destacados de la comunidad")
+    st.markdown("")
     
-    # Nota informativa
-    st.success(f"📊 Mostrando insights de **toda la comunidad** ({len(df)} celerados). Los filtros no afectan esta vista.")
-    
-    # Overview con tarjetas de métricas
-    st.markdown("### 🌟 Visión General")
-    
-    metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
+    # Métricas principales en la parte superior
+    metric_col1, metric_col2, metric_col3, metric_col4, metric_col5 = st.columns(5)
     
     with metric_col1:
         total_celerados = len(df)
-        delta_filtrado = len(filtro) - total_celerados
-        st.metric("🧑‍🤝‍🧑 Total Celerados", total_celerados, delta=f"{delta_filtrado:+d} filtrados" if filtro is not None and len(filtro) != total_celerados else None)
+        st.metric("👥 Celerados", total_celerados)
     
     with metric_col2:
         num_generaciones = len(df["Generación"].unique()) if "Generación" in df.columns else 0
-        st.metric("🎓 Generaciones Activas", num_generaciones)
+        st.metric("🎓 Generaciones", num_generaciones)
     
     with metric_col3:
         if "Años experiencia num" in df.columns:
             exp_promedio = df["Años experiencia num"].mean()
-            st.metric("📈 Experiencia Media", f"{exp_promedio:.1f} años")
+            st.metric("📈 Exp. Media", f"{exp_promedio:.1f} años")
         else:
-            st.metric("📈 Experiencia Media", "N/A")
+            st.metric("📈 Exp. Media", "N/A")
     
     with metric_col4:
         if "Ubicación normalizada" in df.columns:
@@ -1096,19 +1392,30 @@ with tab4:
         else:
             st.metric("🌍 Ubicaciones", "N/A")
     
+    with metric_col5:
+        if "Areas de acción normalizadas" in df.columns:
+            networking_count = 0
+            for lista_areas in df["Areas de acción normalizadas"].dropna():
+                if isinstance(lista_areas, list):
+                    if any("Networking" in area for area in lista_areas):
+                        networking_count += 1
+            tasa_networking = (networking_count / len(df)) * 100
+            st.metric("🤝 Networking", f"{tasa_networking:.0f}%")
+        else:
+            st.metric("🤝 Networking", "N/A")
+    
     st.divider()
     
-    # Insights organizados en columnas
-    insight_col1, insight_col2 = st.columns([1, 1])
+    # Tabs secundarias para organizar el contenido
+    insights_tab1, insights_tab2, insights_tab3 = st.tabs(["🏆 Rankings", "📊 Análisis Detallado", "✨ Datos Curiosos"])
     
-    with insight_col1:
-        # TOP 5 Rankings con visualización compacta
-        st.markdown("### 🏆 Top Rankings")
+    with insights_tab1:
+        # Columnas para rankings lado a lado
+        rank_col1, rank_col2, rank_col3 = st.columns(3)
         
-        # Industrias más representadas
-        if "Industrias normalizadas" in df.columns:
-            with st.container():
-                st.markdown("#### 🏭 **Industrias Líderes**")
+        with rank_col1:
+            st.markdown("### 🏭 Top Industrias")
+            if "Industrias normalizadas" in df.columns:
                 industrias_exploded = []
                 for lista_ind in df["Industrias normalizadas"].dropna():
                     if isinstance(lista_ind, list):
@@ -1116,196 +1423,674 @@ with tab4:
                 
                 if industrias_exploded:
                     industrias_top = pd.Series(industrias_exploded).value_counts().head(5)
-                    for i, (industria, count) in enumerate(industrias_top.items(), 1):
-                        porcentaje = (count / len(df)) * 100
-                        st.markdown(f"**{i}.** {industria}")
-                        st.progress(porcentaje / 100, text=f"{count} celerados ({porcentaje:.1f}%)")
-                st.markdown("")
+                    
+                    # Crear gráfico compacto
+                    fig_ind = px.bar(
+                        x=industrias_top.values,
+                        y=industrias_top.index,
+                        orientation='h',
+                        color=industrias_top.values,
+                        color_continuous_scale="Blues",
+                        text=industrias_top.values
+                    )
+                    fig_ind.update_traces(textposition='outside')
+                    fig_ind.update_layout(
+                        showlegend=False,
+                        height=300,
+                        margin=dict(l=0, r=0, t=0, b=0),
+                        xaxis_title="",
+                        yaxis_title=""
+                    )
+                    st.plotly_chart(fig_ind, use_container_width=True)
         
-        # Categorías de rol
-        if "Categoría rol" in df.columns:
-            with st.container():
-                st.markdown("#### 👔 **Roles Dominantes**")
+        with rank_col2:
+            st.markdown("### 👔 Top Roles")
+            if "Categoría rol" in df.columns:
                 categorias_top = df["Categoría rol"].value_counts().head(5)
-                for i, (categoria, count) in enumerate(categorias_top.items(), 1):
-                    porcentaje = (count / len(df)) * 100
-                    st.markdown(f"**{i}.** {categoria}")
-                    st.progress(porcentaje / 100, text=f"{count} celerados ({porcentaje:.1f}%)")
-                st.markdown("")
+                
+                # Crear gráfico compacto
+                fig_roles = px.bar(
+                    x=categorias_top.values,
+                    y=categorias_top.index,
+                    orientation='h',
+                    color=categorias_top.values,
+                    color_continuous_scale="Greens",
+                    text=categorias_top.values
+                )
+                fig_roles.update_traces(textposition='outside')
+                fig_roles.update_layout(
+                    showlegend=False,
+                    height=300,
+                    margin=dict(l=0, r=0, t=0, b=0),
+                    xaxis_title="",
+                    yaxis_title=""
+                )
+                st.plotly_chart(fig_roles, use_container_width=True)
         
-        # Ubicaciones principales
-        if "Ubicación normalizada" in df.columns:
-            with st.container():
-                st.markdown("#### 📍 **Hubs Geográficos**")
+        with rank_col3:
+            st.markdown("### 📍 Top Ubicaciones")
+            if "Ubicación normalizada" in df.columns:
                 ubicaciones_top = df["Ubicación normalizada"].value_counts().head(5)
-                for i, (ubicacion, count) in enumerate(ubicaciones_top.items(), 1):
-                    porcentaje = (count / len(df)) * 100
-                    st.markdown(f"**{i}.** {ubicacion}")
-                    st.progress(porcentaje / 100, text=f"{count} celerados ({porcentaje:.1f}%)")
-    
-    with insight_col2:
-        # Insights derivados y análisis
-        st.markdown("### 💡 Insights Clave")
+                
+                # Crear gráfico compacto
+                fig_ub = px.bar(
+                    x=ubicaciones_top.values,
+                    y=ubicaciones_top.index,
+                    orientation='h',
+                    color=ubicaciones_top.values,
+                    color_continuous_scale="Oranges",
+                    text=ubicaciones_top.values
+                )
+                fig_ub.update_traces(textposition='outside')
+                fig_ub.update_layout(
+                    showlegend=False,
+                    height=300,
+                    margin=dict(l=0, r=0, t=0, b=0),
+                    xaxis_title="",
+                    yaxis_title=""
+                )
+                st.plotly_chart(fig_ub, use_container_width=True)
         
-        # Insight 1: Perfil dominante
-        with st.container():
-            st.markdown("#### 🎯 **Perfil Dominante**")
-            
+        # Fila adicional para más insights
+        st.divider()
+        
+        insights_col1, insights_col2 = st.columns(2)
+        
+        with insights_col1:
+            st.markdown("### 🎯 Perfil Dominante")
             if "Industrias normalizadas" in df.columns and "Categoría rol" in df.columns:
-                # Encontrar la combinación más común
                 industrias_exploded = []
                 for lista_ind in df["Industrias normalizadas"].dropna():
                     if isinstance(lista_ind, list) and len(lista_ind) > 0:
-                        industrias_exploded.append(lista_ind[0])  # Primera industria
+                        industrias_exploded.append(lista_ind[0])
                 
                 if industrias_exploded:
                     industria_top = pd.Series(industrias_exploded).value_counts().index[0]
                     rol_top = df["Categoría rol"].value_counts().index[0]
                     
-                    st.success(f"**{industria_top}** × **{rol_top}**")
+                    st.info(f"**{industria_top}** × **{rol_top}**")
                     st.caption("Combinación más común en la comunidad")
         
-        # Insight 2: Distribución de experiencia
-        with st.container():
-            st.markdown("#### 📊 **Distribución de Experiencia**")
-            
+        with insights_col2:
+            st.markdown("### 📊 Distribución de Experiencia")
             if "¿Años de experiencia?" in df.columns:
                 exp_dist = df["¿Años de experiencia?"].value_counts()
                 
-                # Crear gráfico de dona pequeño
-                fig_exp_dist = px.pie(
+                fig_exp = px.pie(
                     values=exp_dist.values,
                     names=exp_dist.index,
-                    hole=0.5,
+                    hole=0.4,
                     color_discrete_sequence=px.colors.sequential.Teal
                 )
-                fig_exp_dist.update_layout(
-                    height=300,
+                fig_exp.update_layout(
+                    height=250,
                     margin=dict(l=0, r=0, t=0, b=0),
                     showlegend=True,
-                    legend=dict(orientation="v", yanchor="middle", y=0.5)
+                    legend=dict(orientation="h", yanchor="bottom", y=-0.2)
                 )
-                st.plotly_chart(fig_exp_dist, width='stretch')
+                st.plotly_chart(fig_exp, use_container_width=True)
+    
+    with insights_tab2:
+        analysis_col1, analysis_col2 = st.columns(2)
         
-        # Insight 3: Áreas de acción más demandadas
-        if "Areas de acción normalizadas" in df.columns:
-            with st.container():
-                st.markdown("#### 🎯 **Intereses de la Comunidad**")
-                areas_exploded = []
-                for lista_areas in df["Areas de acción normalizadas"].dropna():
-                    if isinstance(lista_areas, list):
-                        areas_exploded.extend(lista_areas)
-                
-                if areas_exploded:
-                    areas_top = pd.Series(areas_exploded).value_counts().head(3)
+        with analysis_col1:
+            # Análisis por generaciones en expander
+            with st.expander("👥 **Análisis por Generación**", expanded=True):
+                if "Generación" in df.columns and "Categoría rol" in df.columns:
+                    gen_data_list = []
+                    for gen in sorted(df["Generación"].dropna().unique()):
+                        gen_df = df[df["Generación"] == gen]
+                        top_rol = gen_df["Categoría rol"].value_counts().head(1)
+                        
+                        if len(top_rol) > 0:
+                            gen_data_list.append({
+                                'Generación': f"G{gen}",
+                                'Total': len(gen_df),
+                                'Rol Principal': top_rol.index[0],
+                                'Cantidad': top_rol.values[0]
+                            })
                     
-                    for area, count in areas_top.items():
-                        porcentaje = (count / len(df)) * 100
-                        st.markdown(f"**{area}**")
-                        st.progress(porcentaje / 100, text=f"{porcentaje:.0f}% de celerados")
-    
-    st.divider()
-    
-    # Sección de insights destacados
-    st.markdown("### 🔍 Análisis Detallado")
-    
-    col_a, col_b = st.columns(2)
-    
-    with col_a:
-        # Análisis de generaciones
-        if "Generación" in df.columns and "Categoría rol" in df.columns:
-            st.markdown("#### 👥 Generaciones × Roles")
+                    if gen_data_list:
+                        gen_summary = pd.DataFrame(gen_data_list)
+                        st.dataframe(gen_summary, use_container_width=True, hide_index=True)
             
-            # Crear tabla cruzada
-            gen_rol_cross = pd.crosstab(df["Generación"], df["Categoría rol"])
-            
-            # Mostrar top 3 categorías de rol por generación
-            for gen in sorted(df["Generación"].dropna().unique()):
-                gen_data = df[df["Generación"] == gen]
-                top_rol = gen_data["Categoría rol"].value_counts().head(1)
-                
-                if len(top_rol) > 0:
-                    rol_name = top_rol.index[0]
-                    count = top_rol.values[0]
-                    total_gen = len(gen_data)
-                    pct = (count / total_gen) * 100
+            # Intereses de la comunidad
+            with st.expander("🎯 **Intereses de la Comunidad**", expanded=True):
+                if "Areas de acción normalizadas" in df.columns:
+                    areas_exploded = []
+                    for lista_areas in df["Areas de acción normalizadas"].dropna():
+                        if isinstance(lista_areas, list):
+                            areas_exploded.extend(lista_areas)
                     
-                    st.markdown(f"**G{gen}** ({total_gen} celerados)")
-                    st.caption(f"👉 {rol_name}: {count} ({pct:.0f}%)")
-    
-    with col_b:
-        # Análisis de distribución geográfica por industria
-        if "Ubicación normalizada" in df.columns and "Industrias normalizadas" in df.columns:
-            st.markdown("#### 🌍 Hubs por Industria")
-            
-            # Obtener top 3 industrias
-            industrias_exploded = []
-            for lista_ind in df["Industrias normalizadas"].dropna():
-                if isinstance(lista_ind, list):
-                    industrias_exploded.extend(lista_ind)
-            
-            if industrias_exploded:
-                top_3_industrias = pd.Series(industrias_exploded).value_counts().head(3).index
-                
-                for industria in top_3_industrias:
-                    # Filtrar personas con esa industria
-                    df_industria = df[df["Industrias normalizadas"].apply(
-                        lambda x: industria in x if isinstance(x, list) else False
-                    )]
+                    if areas_exploded:
+                        areas_counts = pd.Series(areas_exploded).value_counts().head(6)
+                        
+                        fig_areas = px.bar(
+                            x=areas_counts.values,
+                            y=areas_counts.index,
+                            orientation='h',
+                            color=areas_counts.values,
+                            color_continuous_scale="Purples"
+                        )
+                        fig_areas.update_layout(
+                            showlegend=False,
+                            height=250,
+                            margin=dict(l=0, r=0, t=10, b=0),
+                            xaxis_title="",
+                            yaxis_title=""
+                        )
+                        st.plotly_chart(fig_areas, use_container_width=True)
+        
+        with analysis_col2:
+            # Hubs geográficos por industria
+            with st.expander("🌍 **Hubs Geográficos por Industria**", expanded=True):
+                if "Ubicación normalizada" in df.columns and "Industrias normalizadas" in df.columns:
+                    industrias_exploded = []
+                    for lista_ind in df["Industrias normalizadas"].dropna():
+                        if isinstance(lista_ind, list):
+                            industrias_exploded.extend(lista_ind)
                     
-                    if len(df_industria) > 0 and "Ubicación normalizada" in df_industria.columns:
-                        top_ubicacion = df_industria["Ubicación normalizada"].value_counts().head(1)
-                        if len(top_ubicacion) > 0:
-                            ciudad = top_ubicacion.index[0]
-                            count = top_ubicacion.values[0]
+                    if industrias_exploded:
+                        top_3_industrias = pd.Series(industrias_exploded).value_counts().head(3).index
+                        
+                        hub_data = []
+                        for industria in top_3_industrias:
+                            df_industria = df[df["Industrias normalizadas"].apply(
+                                lambda x: industria in x if isinstance(x, list) else False
+                            )]
                             
-                            st.markdown(f"**{industria}**")
-                            st.caption(f"📍 Hub principal: {ciudad} ({count} celerados)")
-    
-    st.divider()
-    
-    # Sección final: Datos destacados
-    st.markdown("### ✨ Datos Destacados")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        if "Superpoder" in df.columns:
-            st.markdown("#### ⚡ Superpoder Único")
-            # Encontrar el superpoder más raro (que solo 1 persona tiene)
-            superpoderes_unicos = df["Superpoder"].value_counts()
-            unicos = superpoderes_unicos[superpoderes_unicos == 1]
+                            if len(df_industria) > 0 and "Ubicación normalizada" in df_industria.columns:
+                                top_ubicacion = df_industria["Ubicación normalizada"].value_counts().head(1)
+                                if len(top_ubicacion) > 0:
+                                    hub_data.append({
+                                        'Industria': industria,
+                                        'Hub Principal': top_ubicacion.index[0],
+                                        'Celerados': top_ubicacion.values[0]
+                                    })
+                        
+                        if hub_data:
+                            hub_df = pd.DataFrame(hub_data)
+                            st.dataframe(hub_df, use_container_width=True, hide_index=True)
             
-            if len(unicos) > 0:
-                st.info(f"**{len(unicos)}** superpoderes únicos en la comunidad")
+            # Top superpoderes
+            with st.expander("⚡ **Top Superpoderes**", expanded=True):
+                if "Superpoder" in df.columns:
+                    superpoderes_top = df["Superpoder"].value_counts().head(5)
+                    
+                    fig_super = px.bar(
+                        x=superpoderes_top.values,
+                        y=superpoderes_top.index,
+                        orientation='h',
+                        color=superpoderes_top.values,
+                        color_continuous_scale="RdYlGn"
+                    )
+                    fig_super.update_layout(
+                        showlegend=False,
+                        height=250,
+                        margin=dict(l=0, r=0, t=10, b=0),
+                        xaxis_title="",
+                        yaxis_title=""
+                    )
+                    st.plotly_chart(fig_super, use_container_width=True)
+    
+    with insights_tab3:
+        curious_col1, curious_col2, curious_col3 = st.columns(3)
+        
+        with curious_col1:
+            st.markdown("### ⚡ Superpoderes")
+            if "Superpoder" in df.columns:
+                superpoderes_unicos = df["Superpoder"].value_counts()
+                unicos = superpoderes_unicos[superpoderes_unicos == 1]
+                
+                st.metric("Superpoderes Únicos", len(unicos))
+                
+                if len(superpoderes_unicos) > 0:
+                    superpoder_top = superpoderes_unicos.head(1)
+                    st.caption(f"**Más común:** {superpoder_top.index[0]}")
+                    st.caption(f"({superpoder_top.values[0]} personas)")
+        
+        with curious_col2:
+            st.markdown("### 🎓 Academia")
+            if "Área de estudio:" in df.columns:
+                areas_unicas = df["Área de estudio:"].nunique()
+                st.metric("Áreas de Estudio", areas_unicas)
+                
+                top_area = df["Área de estudio:"].value_counts().head(1)
+                if len(top_area) > 0:
+                    st.caption(f"**Más común:** {top_area.index[0]}")
+                    st.caption(f"({top_area.values[0]} personas)")
+        
+        with curious_col3:
+            st.markdown("### 🌐 Global")
+            if "Ubicación normalizada" in df.columns:
+                # Contar países únicos
+                paises = df["Ubicación normalizada"].dropna().str.split(", ").str[-1]
+                paises_unicos = paises.nunique()
+                
+                st.metric("Países Representados", paises_unicos)
+                
+                ciudad_top = df["Ubicación normalizada"].value_counts().head(1)
+                if len(ciudad_top) > 0:
+                    st.caption(f"**Ciudad líder:** {ciudad_top.index[0]}")
+                    st.caption(f"({ciudad_top.values[0]} personas)")
+        
+        st.divider()
+        
+        # Datos adicionales interesantes
+        st.markdown("### 🔍 Datos Adicionales")
+        
+        dato_col1, dato_col2 = st.columns(2)
+        
+        with dato_col1:
+            if "¿Motivación para unirte?" in df.columns:
+                with st.expander("💭 **Motivaciones Principales**"):
+                    motivaciones = df["¿Motivación para unirte?"].value_counts().head(5)
+                    for motiv, count in motivaciones.items():
+                        st.write(f"**{motiv}:** {count} personas ({count/len(df)*100:.1f}%)")
+        
+        with dato_col2:
+            if "¿Quiere ser mentor?" in df.columns:
+                with st.expander("🎓 **Disposición para Mentoría**"):
+                    mentores = df["¿Quiere ser mentor?"].value_counts()
+                    for respuesta, count in mentores.items():
+                        st.write(f"**{respuesta}:** {count} personas ({count/len(df)*100:.1f}%)")
+
+with tab5:
+    st.markdown("## ➕ Agregar Nuevo Miembro")
+    st.markdown("Completa el formulario para unirte a la comunidad Celera y aparecer en el directorio")
+    st.markdown("")
+    
+    with st.form("formulario_nuevo_miembro", clear_on_submit=True):
+        st.markdown("### 📋 Información Personal")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            nombre = st.text_input("* Nombre y apellido", placeholder="Ej: Juan Pérez García")
+            email = st.text_input("* Correo electrónico", placeholder="ejemplo@email.com")
+            telefono = st.text_input("Teléfono", placeholder="+34 600 000 000")
+            fecha_nac = st.date_input("Fecha de nacimiento", value=None, format="DD/MM/YYYY")
+        
+        with col2:
+            lugar_nacimiento = st.text_input("Lugar de nacimiento (país)", placeholder="Ej: España")
+            
+            # Ubicación con opciones predefinidas normalizadas
+            ubicaciones_sugeridas = [
+                "Madrid, España", "Barcelona, España", "Valencia, España", 
+                "Sevilla, España", "Bilbao, España", "Alicante, España",
+                "Zaragoza, España", "Santiago de Compostela, España",
+                "Londres, Reino Unido", "París, Francia", "Berlín, Alemania",
+                "Copenhague, Dinamarca", "Lima, Perú", "Sydney, Australia"
+            ]
+            ubicacion = st.selectbox(
+                "* Ubicación actual (ciudad/país)", 
+                options=[""] + ubicaciones_sugeridas + ["Otra"],
+                help="Selecciona tu ubicación o elige 'Otra' para escribir una personalizada"
+            )
+            
+            if ubicacion == "Otra":
+                ubicacion_otra = st.text_input("Especifica tu ubicación", placeholder="Ciudad, País")
+                ubicacion = ubicacion_otra if ubicacion_otra else ""
+            elif ubicacion == "":
+                ubicacion = ""
+            
+            linkedin = st.text_input("LinkedIn", placeholder="https://linkedin.com/in/tu-perfil")
+            instagram = st.text_input("Instagram", placeholder="@tu_usuario")
+        
+        st.divider()
+        
+        st.markdown("### 🎓 Información Académica")
+        col3, col4 = st.columns(2)
+        
+        with col3:
+            # Generar lista de generaciones (G1-G20)
+            generaciones = [f"G{i}" for i in range(1, 21)]
+            generacion = st.selectbox("* Generación", options=[""] + generaciones)
+            
+            rango_academico = st.selectbox(
+                "Rango académico",
+                options=["", "Licenciatura/Grado", "Máster", "Doctorado", "Postdoctorado", "Estudiante"]
+            )
+            universidad = st.text_input("Universidad", placeholder="Ej: Universidad Complutense de Madrid")
+        
+        with col4:
+            # Áreas de estudio comunes
+            areas_estudio_comunes = [
+                "Biomedicina", "Medicina", "Biología", "Biotecnología",
+                "Ingeniería", "Física", "Química", "Matemáticas",
+                "Informática", "Economía", "Administración de Empresas",
+                "Ciencias Políticas", "Derecho", "Psicología", "Otro"
+            ]
+            area_estudio = st.selectbox("Área de estudio", options=[""] + areas_estudio_comunes)
+            
+            if area_estudio == "Otro":
+                area_estudio_otra = st.text_input("Especifica tu área de estudio")
+                area_estudio = area_estudio_otra if area_estudio_otra else ""
+            
+            año_graduacion = st.number_input("Año de graduación", min_value=1990, max_value=2030, value=None, step=1)
+            test_personalidad = st.text_input("Test de personalidad (Ej: MBTI)", placeholder="Ej: INTJ, ENFP")
+        
+        st.divider()
+        
+        st.markdown("### 💼 Información Profesional")
+        col5, col6 = st.columns(2)
+        
+        with col5:
+            # Industrias normalizadas (multiselección)
+            industrias_opciones = [
+                "Ciencia y Salud",
+                "Tecnología y Producto",
+                "Energía y Sostenibilidad",
+                "Educación",
+                "Finanzas",
+                "Consultoría",
+                "Emprendimiento",
+                "Ingeniería",
+                "Asuntos Públicos",
+                "Servicios Profesionales"
+            ]
+            industrias = st.multiselect(
+                "* Industria(s) en las que trabaja",
+                options=industrias_opciones,
+                help="Puedes seleccionar múltiples industrias"
+            )
+            
+            empresa = st.text_input("Empresa actual", placeholder="Ej: Nombre de la empresa")
+            
+            años_experiencia = st.selectbox(
+                "Años de experiencia",
+                options=["", "0-2 Años", "3-5 Años", "6-10 Años", "Más de 10 años"]
+            )
+        
+        with col6:
+            rol_actual = st.text_input("* Rol actual", placeholder="Ej: Data Scientist, CEO, Investigador...")
+            
+            especializaciones = st.text_area(
+                "Áreas de especialización o interés",
+                placeholder="Ej: Machine Learning, Bioinformática, Startups...",
+                height=100
+            )
+            
+            # Superpoderes predefinidos
+            superpoderes = [
+                "Comunicación", "Liderazgo", "Análisis de datos", 
+                "Resolución de problemas", "Creatividad", "Networking",
+                "Pensamiento estratégico", "Empatía", "Innovación", "Otro"
+            ]
+            superpoder = st.selectbox("Superpoder", options=[""] + superpoderes)
+            
+            if superpoder == "Otro":
+                superpoder_otro = st.text_input("Especifica tu superpoder")
+                superpoder = superpoder_otro if superpoder_otro else ""
+        
+        st.divider()
+        
+        st.markdown("### 🎯 Motivación e Intereses")
+        
+        col7, col8 = st.columns(2)
+        
+        with col7:
+            que_buscas = st.text_area(
+                "¿Qué buscas en Celera?",
+                placeholder="Describe qué esperas encontrar en la comunidad...",
+                height=100
+            )
+            
+            quien_eres = st.text_area(
+                "¿Quién eres?",
+                placeholder="Cuéntanos sobre ti...",
+                height=100
+            )
+            
+            motivacion = st.selectbox(
+                "¿Motivación para unirte?",
+                options=["", "Networking", "Aprendizaje", "Colaboración", "Mentoría", "Crecimiento profesional"]
+            )
+        
+        with col8:
+            como_presentarte = st.text_area(
+                "¿Cómo te gustaría que te presentemos al mundo?",
+                placeholder="Tu elevator pitch...",
+                height=100
+            )
+            
+            objetivo = st.text_area(
+                "¿Objetivo personal o profesional?",
+                placeholder="¿Qué quieres lograr?",
+                height=100
+            )
+        
+        # Áreas de acción (multiselección)
+        areas_accion_opciones = [
+            "Networking",
+            "Mentoría",
+            "Colaboración en proyectos",
+            "Compartir conocimiento",
+            "Aprendizaje",
+            "Emprendimiento",
+            "Investigación",
+            "Desarrollo profesional"
+        ]
+        areas_accion = st.multiselect(
+            "Áreas de acción",
+            options=areas_accion_opciones,
+            help="Selecciona las áreas en las que te gustaría participar"
+        )
+        
+        st.divider()
+        
+        st.markdown("### 🤝 Contribución a la Comunidad")
+        
+        col9, col10 = st.columns(2)
+        
+        with col9:
+            quiere_mentor = st.selectbox("¿Quiere ser mentor?", options=["", "Sí", "No", "Quizás"])
+            dar_charlas = st.selectbox("¿Dar charlas o talleres?", options=["", "Sí", "No", "Quizás"])
+            colaborar_universidades = st.selectbox(
+                "¿Colaborar con universidades o empresas?",
+                options=["", "Sí", "No", "Quizás"]
+            )
+        
+        with col10:
+            temas_abordar = st.text_area(
+                "¿Qué temas podría abordar?",
+                placeholder="Temas en los que podrías dar charlas o mentoría...",
+                height=100
+            )
+            
+            conexiones_buscas = st.text_area(
+                "¿Qué conexiones buscas?",
+                placeholder="Tipo de personas con las que te gustaría conectar...",
+                height=100
+            )
+        
+        area_valor = st.text_area(
+            "¿En qué área crees que podrías aportar más valor?",
+            placeholder="Tu área de mayor expertise...",
+            height=80
+        )
+        
+        st.divider()
+        
+        st.markdown("### 📝 Información Adicional")
+        
+        iniciativas_extra = st.text_area(
+            "Iniciativas extra",
+            placeholder="Proyectos paralelos, voluntariados, etc.",
+            height=80
+        )
+        
+        abierto_conectar = st.selectbox(
+            "Abierto a conectar con empresas, universidades y otros celerados",
+            options=["", "Sí", "No", "Solo celerados"]
+        )
+        
+        impacto_mundo = st.text_area(
+            "¿Cómo te gustaría impactar o cambiar el mundo?",
+            placeholder="Tu visión de impacto...",
+            height=100
+        )
+        
+        algo_inesperado = st.text_area(
+            "¿Algo inesperado o único sobre ti?",
+            placeholder="Un dato curioso o interesante...",
+            height=80
+        )
+        
+        famoso_cena = st.text_input(
+            "¿Con qué famoso cenarías?",
+            placeholder="Persona viva o histórica"
+        )
+        
+        st.divider()
+        
+        st.markdown("### 🧠 Coaching (Opcional)")
+        
+        col11, col12 = st.columns(2)
+        
+        with col11:
+            ha_hecho_coaching = st.selectbox("¿Ha hecho sesión de coaching?", options=["", "Sí", "No"])
+            tipo_coaching = st.selectbox("¿Grupal o individual?", options=["", "Grupal", "Individual", "Ambos"])
+        
+        with col12:
+            expectativas_coaching = st.text_area(
+                "Expectativas de coaching",
+                placeholder="¿Qué esperas del coaching?",
+                height=80
+            )
+            
+            sesion_perfecta = st.text_area(
+                "¿Qué incluirías en tu sesión de coaching perfecta?",
+                placeholder="Elementos ideales de una sesión...",
+                height=80
+            )
+        
+        sugerencias = st.text_area(
+            "¿Sugerencias para Celera?",
+            placeholder="Ideas para mejorar la comunidad...",
+            height=80
+        )
+        
+        # Política de datos
+        st.divider()
+        politica_datos = st.checkbox("* Acepto la política de datos y privacidad", value=False)
+        
+        st.markdown("---")
+        st.caption("* Campos obligatorios")
+        
+        # Botones
+        col_submit1, col_submit2 = st.columns([1, 5])
+        with col_submit1:
+            submit_button = st.form_submit_button("💾 Guardar", type="primary", use_container_width=True)
+        with col_submit2:
+            st.caption("Los datos se añadirán al directorio después de la validación")
+        
+        if submit_button:
+            # Validación de campos obligatorios
+            errores = []
+            
+            if not nombre or nombre.strip() == "":
+                errores.append("Nombre y apellido")
+            if not email or email.strip() == "":
+                errores.append("Correo electrónico")
+            if not ubicacion or ubicacion.strip() == "":
+                errores.append("Ubicación actual")
+            if not generacion or generacion == "":
+                errores.append("Generación")
+            if not industrias or len(industrias) == 0:
+                errores.append("Industria")
+            if not rol_actual or rol_actual.strip() == "":
+                errores.append("Rol actual")
+            if not politica_datos:
+                errores.append("Aceptación de política de datos")
+            
+            if errores:
+                st.error(f"❌ Por favor completa los siguientes campos obligatorios: {', '.join(errores)}")
             else:
-                superpoder_top = superpoderes_unicos.head(1)
-                if len(superpoder_top) > 0:
-                    st.info(f"**{superpoder_top.index[0]}** es el superpoder más común ({superpoder_top.values[0]} personas)")
-    
-    with col2:
-        # Diversidad de formación
-        if "Área de estudio:" in df.columns:
-            st.markdown("#### 🎓 Diversidad Académica")
-            areas_unicas = df["Área de estudio:"].nunique()
-            st.info(f"**{areas_unicas}** áreas de estudio diferentes representadas")
-    
-    with col3:
-        # Tasa de networking
-        if "Areas de acción normalizadas" in df.columns:
-            st.markdown("#### 🤝 Interés en Networking")
-            
-            networking_count = 0
-            for lista_areas in df["Areas de acción normalizadas"].dropna():
-                if isinstance(lista_areas, list):
-                    if any("Networking" in area for area in lista_areas):
-                        networking_count += 1
-            
-            tasa_networking = (networking_count / len(df)) * 100
-            st.info(f"**{tasa_networking:.0f}%** interesados en networking profesional")
+                # Preparar datos para guardar
+                nueva_fila = {
+                    "--": f"{generacion}",
+                    "Nombre y apellido": f"{generacion} - {nombre}",
+                    "Correo electrónico1": email,
+                    "Teléfono": telefono,
+                    "Fecha de nacimiento": fecha_nac.strftime("%Y-%m-%d") if fecha_nac else "",
+                    "Lugar de nacimiento (pais)": lugar_nacimiento,
+                    "Ubicación actual (ciudad/pais)": ubicacion,
+                    "Linkedin": linkedin,
+                    "Instagram": instagram,
+                    "Generación": "",  # Se procesará automáticamente
+                    "Superpoder": superpoder,
+                    "¿Qué buscas en Celera?": que_buscas,
+                    "¿Quién eres?": quien_eres,
+                    "¿Con qué famoso cenarías?": famoso_cena,
+                    "¿Cómo te gustaría impactar o cambiar el mundo?": impacto_mundo,
+                    "¿Objetivo personal o profesional?": objetivo,
+                    "¿Algo inesperado o único?": algo_inesperado,
+                    "Abierto a conectar con empresas, universidades y otros celerados": abierto_conectar,
+                    "¿Motivación para unirte?": motivacion,
+                    "¿Rango académico?": rango_academico,
+                    "¿Universidad?": universidad,
+                    "Área de estudio:": area_estudio,
+                    "Año de graduación": año_graduacion if año_graduacion else "",
+                    "Test de personalidad": test_personalidad,
+                    "¿Cómo te presentemos al mundo?": como_presentarte,
+                    "Iniciativas extra?": iniciativas_extra,
+                    "Industria trabaja": ", ".join(industrias),  # Unir las industrias con comas
+                    "¿Empresa?": empresa,
+                    "¿Años de experiencia?": años_experiencia,
+                    "¿Rol actual?": rol_actual,
+                    "Áreas de especialización o interés:": especializaciones,
+                    "¿Quiere ser mentor?": quiere_mentor,
+                    "¿Dar charlas o talleres?": dar_charlas,
+                    "¿Colaborar con universidades o empresas?": colaborar_universidades,
+                    "¿Temas podría abordar?": temas_abordar,
+                    "¿Qué conexiones buscas?": conexiones_buscas,
+                    "¿Área mas valor aportaría?": area_valor,
+                    "¿Sugerencias?": sugerencias,
+                    "Ha hecho sesión de coaching?": ha_hecho_coaching,
+                    "¿Grupal o individual?": tipo_coaching,
+                    "Expectativas de coaching": expectativas_coaching,
+                    "¿incluirias en tu sesión de coaching perfecta?": sesion_perfecta,
+                    "¿Política de datos?": "Sí" if politica_datos else "No",
+                    "Area de acción": ", ".join(areas_accion)  # Unir las áreas con comas
+                }
+                
+                try:
+                    # Leer CSV existente
+                    df_existente = pd.read_csv("directorio.csv.csv")
+                    
+                    # Agregar nueva fila
+                    df_nuevo = pd.concat([df_existente, pd.DataFrame([nueva_fila])], ignore_index=True)
+                    
+                    # Guardar CSV actualizado
+                    df_nuevo.to_csv("directorio.csv.csv", index=False)
+                    
+                    st.success("✅ ¡Perfil guardado exitosamente!")
+                    st.balloons()
+                    st.info("🔄 Recarga la página para ver el nuevo perfil en el directorio")
+                    
+                    # Mostrar resumen
+                    with st.expander("📋 Resumen del perfil guardado"):
+                        st.markdown(f"**Nombre:** {nombre}")
+                        st.markdown(f"**Email:** {email}")
+                        st.markdown(f"**Generación:** {generacion}")
+                        st.markdown(f"**Ubicación:** {ubicacion}")
+                        st.markdown(f"**Industrias:** {', '.join(industrias)}")
+                        st.markdown(f"**Rol:** {rol_actual}")
+                        if areas_accion:
+                            st.markdown(f"**Áreas de acción:** {', '.join(areas_accion)}")
+                    
+                except Exception as e:
+                    st.error(f"❌ Error al guardar los datos: {str(e)}")
+                    st.info("💡 Verifica que el archivo 'directorio.csv.csv' exista y tengas permisos de escritura")
 
 # --- Footer ---
 st.sidebar.markdown("---")
-st.sidebar.markdown("**Celera Directory MVP**")
-st.sidebar.markdown("Desarrollado con Streamlit")
-st.sidebar.markdown(f"📊 {len(df)} celerados en la base de datos") 
+st.sidebar.markdown("### Celera Community")
+st.sidebar.markdown("#### 📊 Estadísticas")
+st.sidebar.info(f"""
+**{len(df)}** Celerados registrados  
+**{total_generaciones}** Generaciones activas
+""")
+st.sidebar.markdown("---")
+st.sidebar.caption("Desarrollado con ❤️ para la comunidad Celera")
+st.sidebar.caption("Powered by Streamlit") 
