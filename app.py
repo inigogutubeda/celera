@@ -580,17 +580,37 @@ def crear_features_enriquecidas(row):
         area = str(row["Área de estudio:"])
         features.extend([area] * 2)
     
-    # NIVEL 4: Características CONTEXTUALES (peso x1)
+    # NIVEL 4: Características CONTEXTUALES (peso x2)
     if pd.notna(row.get("¿Rol actual?")):
-        features.append(str(row["¿Rol actual?"]))
+        features.extend([str(row["¿Rol actual?"])] * 2)
     
     if pd.notna(row.get("Superpoder")):
-        features.append(str(row["Superpoder"]))
+        features.extend([str(row["Superpoder"])] * 2)
     
     if pd.notna(row.get("¿Motivación para unirte?")):
-        features.append(str(row["¿Motivación para unirte?"]))
+        features.extend([str(row["¿Motivación para unirte?"])] * 2)
     
-    # NIVEL 5: Meta-características (generación como contexto)
+    # NIVEL 5: Características ADICIONALES (peso x2) - Conexiones y expertise
+    if pd.notna(row.get("¿Qué conexiones buscas?")):
+        features.extend([str(row["¿Qué conexiones buscas?"])] * 2)
+    
+    if pd.notna(row.get("¿Área mas valor aportaría?")):
+        features.extend([str(row["¿Área mas valor aportaría?"])] * 2)
+    
+    if pd.notna(row.get("Áreas de especialización o interés:")):
+        features.extend([str(row["Áreas de especialización o interés:"])] * 2)
+    
+    # NIVEL 6: Características COMPLEMENTARIAS (peso x1)
+    if pd.notna(row.get("¿Temas podría abordar?")):
+        features.append(str(row["¿Temas podría abordar?"]))
+    
+    if pd.notna(row.get("¿Empresa?")):
+        features.append(str(row["¿Empresa?"]))
+    
+    if pd.notna(row.get("¿Universidad?")):
+        features.append(str(row["¿Universidad?"]))
+    
+    # NIVEL 7: Meta-características (generación como contexto)
     if pd.notna(row.get("Generación")):
         features.append(f"Gen{row['Generación']}")
     
@@ -854,6 +874,31 @@ motivacion = st.sidebar.multiselect(
     sorted(df["¿Motivación para unirte?"].dropna().unique()) if "¿Motivación para unirte?" in df.columns else []
 )
 
+# Filtro por disponibilidad de mentoría
+quiere_mentor = st.sidebar.multiselect(
+    "🎓 Disponible para Mentoría",
+    sorted(df["¿Quiere ser mentor?"].dropna().unique()) if "¿Quiere ser mentor?" in df.columns else []
+)
+
+# Filtro por disponibilidad para dar charlas
+dar_charlas = st.sidebar.multiselect(
+    "🎤 Disponible para Charlas",
+    sorted(df["¿Dar charlas o talleres?"].dropna().unique()) if "¿Dar charlas o talleres?" in df.columns else []
+)
+
+# Filtro por empresa
+if "¿Empresa?" in df.columns:
+    empresas_disponibles = sorted(df["¿Empresa?"].dropna().unique())
+    if len(empresas_disponibles) > 0:
+        empresa = st.sidebar.multiselect(
+            "🏢 Empresa",
+            empresas_disponibles
+        )
+    else:
+        empresa = []
+else:
+    empresa = []
+
 # --- Aplicar filtros ---
 filtro = df.copy()
 
@@ -909,6 +954,18 @@ if area_estudio:
 if motivacion:
     filtro = filtro[filtro["¿Motivación para unirte?"].isin(motivacion)]
 
+# Filtro por disponibilidad de mentoría
+if quiere_mentor:
+    filtro = filtro[filtro["¿Quiere ser mentor?"].isin(quiere_mentor)]
+
+# Filtro por disponibilidad para dar charlas
+if dar_charlas:
+    filtro = filtro[filtro["¿Dar charlas o talleres?"].isin(dar_charlas)]
+
+# Filtro por empresa
+if empresa:
+    filtro = filtro[filtro["¿Empresa?"].isin(empresa)]
+
 # --- Información de filtrado en sidebar ---
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 📊 Estado del Filtrado")
@@ -938,6 +995,12 @@ if len(filtro) < len(df):
         filtros_activos.append(f"Área estudio: {len(area_estudio)}")
     if motivacion:
         filtros_activos.append(f"Motivación: {len(motivacion)}")
+    if quiere_mentor:
+        filtros_activos.append(f"Disponible mentoría: {len(quiere_mentor)}")
+    if dar_charlas:
+        filtros_activos.append(f"Disponible charlas: {len(dar_charlas)}")
+    if empresa:
+        filtros_activos.append(f"Empresa: {len(empresa)}")
     
     if filtros_activos:
         st.sidebar.caption("**Filtros activos:**")
@@ -1361,6 +1424,68 @@ with tab3:
                         yaxis_title="Superpoder"
                     )
                     st.plotly_chart(fig_super, width='stretch')
+        
+        # Nueva pestaña para datos adicionales
+        st.divider()
+        st.markdown("### 🔍 Análisis Adicionales")
+        
+        additional_col1, additional_col2 = st.columns(2)
+        
+        with additional_col1:
+            # Análisis de empresas
+            if "¿Empresa?" in datos_analytics.columns:
+                st.markdown("#### 🏢 Top Empleadores")
+                empresas = datos_analytics["¿Empresa?"].dropna()
+                if len(empresas) > 0:
+                    empresas_top = empresas.value_counts().head(10)
+                    
+                    fig_empresas = px.bar(
+                        x=empresas_top.values,
+                        y=empresas_top.index,
+                        orientation='h',
+                        color=empresas_top.values,
+                        color_continuous_scale="Blues",
+                        text=empresas_top.values
+                    )
+                    fig_empresas.update_traces(textposition='outside')
+                    fig_empresas.update_layout(
+                        showlegend=False,
+                        height=350,
+                        margin=dict(l=0, r=0, t=10, b=0),
+                        xaxis_title="Celerados",
+                        yaxis_title=""
+                    )
+                    st.plotly_chart(fig_empresas, width='stretch')
+                else:
+                    st.info("No hay datos de empresas disponibles")
+        
+        with additional_col2:
+            # Análisis de universidades
+            if "¿Universidad?" in datos_analytics.columns:
+                st.markdown("#### 🎓 Top Universidades")
+                universidades = datos_analytics["¿Universidad?"].dropna()
+                if len(universidades) > 0:
+                    unis_top = universidades.value_counts().head(10)
+                    
+                    fig_unis = px.bar(
+                        x=unis_top.values,
+                        y=unis_top.index,
+                        orientation='h',
+                        color=unis_top.values,
+                        color_continuous_scale="Greens",
+                        text=unis_top.values
+                    )
+                    fig_unis.update_traces(textposition='outside')
+                    fig_unis.update_layout(
+                        showlegend=False,
+                        height=350,
+                        margin=dict(l=0, r=0, t=10, b=0),
+                        xaxis_title="Celerados",
+                        yaxis_title=""
+                    )
+                    st.plotly_chart(fig_unis, width='stretch')
+                else:
+                    st.info("No hay datos de universidades disponibles")
 
 with tab4:
     st.markdown("## 🎯 Insights Clave")
@@ -1694,6 +1819,82 @@ with tab4:
                     mentores = df["¿Quiere ser mentor?"].value_counts()
                     for respuesta, count in mentores.items():
                         st.write(f"**{respuesta}:** {count} personas ({count/len(df)*100:.1f}%)")
+        
+        # Nueva sección: Métricas de Colaboración
+        st.divider()
+        st.markdown("### 🤝 Oportunidades de Colaboración")
+        
+        colab_col1, colab_col2, colab_col3 = st.columns(3)
+        
+        with colab_col1:
+            if "¿Quiere ser mentor?" in df.columns:
+                mentores = df["¿Quiere ser mentor?"].value_counts()
+                si_mentor = mentores.get("Sí", 0) if "Sí" in mentores else 0
+                st.metric("🎓 Mentores Disponibles", si_mentor, 
+                         f"{si_mentor/len(df)*100:.0f}%" if len(df) > 0 else "0%")
+        
+        with colab_col2:
+            if "¿Dar charlas o talleres?" in df.columns:
+                charlas = df["¿Dar charlas o talleres?"].value_counts()
+                si_charlas = charlas.get("Sí", 0) if "Sí" in charlas else 0
+                st.metric("🎤 Speakers Disponibles", si_charlas,
+                         f"{si_charlas/len(df)*100:.0f}%" if len(df) > 0 else "0%")
+        
+        with colab_col3:
+            if "¿Colaborar con universidades o empresas?" in df.columns:
+                colab = df["¿Colaborar con universidades o empresas?"].value_counts()
+                si_colab = colab.get("Sí", 0) if "Sí" in colab else 0
+                st.metric("🤝 Abiertos a Colaborar", si_colab,
+                         f"{si_colab/len(df)*100:.0f}%" if len(df) > 0 else "0%")
+        
+        # Análisis de Coaching
+        st.divider()
+        st.markdown("### 🧠 Análisis de Coaching")
+        
+        coaching_col1, coaching_col2 = st.columns(2)
+        
+        with coaching_col1:
+            if "Ha hecho sesión de coaching?" in df.columns:
+                with st.expander("📊 **Experiencia en Coaching**", expanded=False):
+                    coach_exp = df["Ha hecho sesión de coaching?"].value_counts()
+                    if len(coach_exp) > 0:
+                        fig_coach = px.pie(
+                            values=coach_exp.values, 
+                            names=coach_exp.index, 
+                            hole=0.4,
+                            color_discrete_sequence=px.colors.sequential.Teal
+                        )
+                        fig_coach.update_layout(
+                            height=250,
+                            margin=dict(l=0, r=0, t=0, b=0),
+                            showlegend=True
+                        )
+                        st.plotly_chart(fig_coach, use_container_width=True)
+                    else:
+                        st.info("No hay datos de experiencia en coaching")
+        
+        with coaching_col2:
+            if "¿Grupal o individual?" in df.columns:
+                with st.expander("👥 **Preferencia de Formato**", expanded=False):
+                    formato = df["¿Grupal o individual?"].dropna().value_counts()
+                    if len(formato) > 0:
+                        fig_formato = px.bar(
+                            x=formato.values,
+                            y=formato.index,
+                            orientation='h',
+                            color=formato.values,
+                            color_continuous_scale="Purples"
+                        )
+                        fig_formato.update_layout(
+                            showlegend=False,
+                            height=250,
+                            margin=dict(l=0, r=0, t=10, b=0),
+                            xaxis_title="",
+                            yaxis_title=""
+                        )
+                        st.plotly_chart(fig_formato, use_container_width=True)
+                    else:
+                        st.info("No hay datos de preferencia de formato")
 
 with tab5:
     st.markdown("## ➕ Agregar Nuevo Miembro")

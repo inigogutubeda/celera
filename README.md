@@ -1,14 +1,39 @@
-# 📒 Directorio Celera MVP
+# 🌟 Celera Community Platform
 
-Una aplicación web interactiva para explorar y conectar con la comunidad de Celerados, aprovechando todos los datos ricos del directorio real.
+Una aplicación web inteligente para conectar talento excepcional con oportunidades y facilitar el networking dentro de la comunidad Celera.
 
-## 🚀 Características
+## 📋 Estado del Proyecto
 
-- **📒 Directorio Interactivo**: Filtros avanzados por generación, industria, rol, ubicación, experiencia, superpoder, área de estudio y motivación
-- **🔗 Matchmaking Inteligente**: Encuentra perfiles similares usando similitud de texto con razones específicas del match
-- **📊 Dashboard Analítico**: Visualizaciones con Plotly para insights de la comunidad
-- **🎯 Insights de Comunidad**: Análisis de superpoderes, motivaciones y áreas de estudio más populares
-- **☁️ Despliegue Fácil**: Listo para Streamlit Cloud
+**Versión Actual**: v1.0 - MVP Directorio  
+**En Planificación**: v2.0 - Platform Multi-Usuario  
+**Dataset**: 457 celerados × 44 campos  
+
+## 🎯 Visión 2.0
+
+Transformar el directorio actual en una **plataforma completa** con tres tipos de usuarios:
+
+- 🏢 **Empresas**: Buscar y contactar talento verificado
+- 🌟 **Celerados**: Networking, mentorías y crecimiento
+- 👔 **Equipo Celera**: Gestión administrativa completa
+
+## 📚 Documentación de Planificación
+
+Análisis exhaustivo y plan de implementación disponibles en:
+
+- 📊 **`ANALISIS_DATASET.md`** - Estructura completa de las 44 columnas
+- 📋 **`PLAN_REDISEÑO_APP.md`** - Plan maestro de rediseño (170 horas)
+- 🔧 **`IMPLEMENTACION_TECNICA.md`** - Código y arquitectura detallada
+- 🏛️ **`ARQUITECTURA_VISUAL.md`** - Diagramas y flujos visuales
+- 💼 **`PROPUESTA_CLIENTE.md`** - Resumen ejecutivo para stakeholders
+
+## 🚀 Características Actuales (v1.0)
+
+- **📒 Directorio Interactivo**: Filtros avanzados multi-criterio
+- **🔗 Matchmaking Inteligente**: TF-IDF + Cosine Similarity con ponderación
+- **📊 Dashboard Analítico**: Visualizaciones interactivas con Plotly
+- **🎯 Insights de Comunidad**: Rankings y patrones de la comunidad
+- **➕ Formulario Registro**: Alta de nuevos miembros
+- **☁️ Cloud Ready**: Deploy en Streamlit Cloud
 
 ## 🛠️ Instalación
 
@@ -172,20 +197,80 @@ streamlit run app.py --server.port 8502
 - Verifica que los datos tengan las columnas necesarias
 - Asegúrate de que haya suficientes perfiles para hacer matches
 
-## 📊 Datos Soportados
+## 📊 Estructura de Datos
 
-La aplicación está optimizada para trabajar con el formato específico del directorio de Celera, incluyendo:
+### Dataset Principal: `Directorio Celerados.xlsx`
 
-- **Generaciones**: G1, G2, G3, G4, G5, G6, G7, G8, G9, G10, G11
-- **Industrias**: Tecnología, Finanzas, Salud, Educación, Consultoría, Marketing, etc.
-- **Superpoderes**: Creatividad, Liderazgo, Comunicación, etc.
-- **Motivaciones**: Ampliar red profesional, Conectar con empresas, Dar charlas, etc.
-- **Áreas de estudio**: Ingeniería, Medicina, ADE, Biotecnología, etc.
+- **457 registros** (celerados activos)
+- **44 columnas** de información
+- **11 generaciones** representadas (G1-G11)
 
-## 📞 Soporte
+**Campos categorizados en**:
+- 🆔 Identificación y Contacto (9 campos)
+- 💼 Información Profesional (6 campos)
+- 🎓 Información Académica (6 campos)
+- 🌟 Identidad y Valores (8 campos)
+- 🤝 Contribución a Comunidad (6 campos)
+- 🧠 Coaching y Desarrollo (5 campos)
+- 🎯 Áreas de Acción (1 campo multi-valor)
 
-Para problemas o mejoras, crea un issue en el repositorio.
+Ver análisis completo en `ANALISIS_DATASET.md`
+
+### Normalización Automática
+
+La app normaliza automáticamente:
+- ✅ **Industrias** → 10 categorías principales
+- ✅ **Roles** → 13 categorías de rol
+- ✅ **Ubicaciones** → Formato "Ciudad, País"
+- ✅ **Experiencia** → Valores numéricos (1, 4, 8, 15)
+- ✅ **Áreas de acción** → Array estructurado
 
 ---
 
-**Desarrollado con ❤️ para la comunidad Celera** 
+## 🚀 Próximos Pasos
+
+### Roadmap v2.0 (En Planificación):
+
+**Fase 1** - MVP Multi-Usuario (2-3 meses):
+- 🔐 Sistema de autenticación por roles
+- 🏢 Módulo Empresas (búsqueda + matchmaking + solicitudes)
+- 👔 Módulo Trabajadores (administración completa)
+- 🌟 Módulo Celerados (networking + mentorías)
+
+**Fase 2** - Stack Moderno (2-3 meses):
+- 🌐 Frontend: Next.js (Vercel)
+- 🔌 Backend: FastAPI (Railway)
+- 🗄️ Database: Supabase (PostgreSQL)
+- 📱 Mobile-friendly + PWA
+
+Ver plan completo en:
+- `PLAN_REDISEÑO_APP.md` - Estrategia y timeline
+- `IMPLEMENTACION_TECNICA.md` - Código y arquitectura
+- `ARQUITECTURA_VISUAL.md` - Diagramas y flujos
+
+---
+
+## 📞 Contacto
+
+**Para el equipo Celera**:
+- 📧 Preguntas técnicas: Ver documentación en carpeta
+- 💡 Sugerencias: Documentar en issues
+- 🐛 Bugs: Reportar con detalles de reproducción
+
+**Para empresas interesadas**:
+- Contactar: contacto@celera.com
+- Beta disponible Q1 2026
+
+---
+
+## 🔒 Privacidad y Datos
+
+- ✅ Todos los celerados han aceptado política de datos
+- ✅ Control de visibilidad por perfil
+- ✅ Opt-in para contacto con empresas
+- ✅ Cumplimiento GDPR
+
+---
+
+**Desarrollado con ❤️ para la comunidad Celera**  
+*Conectando talento excepcional con oportunidades extraordinarias* 
